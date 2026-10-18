@@ -14,6 +14,7 @@ import { DiffPanel } from '../panel/DiffPanel';
 
 import { FolderFavoritesProvider } from '../sidebar/FolderFavoritesProvider';
 import { FolderFavoriteItem } from '../sidebar/trees/FolderFavoriteItem';
+import { FolderFavoriteGroupItem } from '../sidebar/trees/FolderFavoriteGroupItem';
 import { openFolder } from '../common/dialogs';
 import { FolderFavoritesDialog } from '../dialogs/FolderFavoritesDialog';
 import { FolderFavoritesState } from '../states/FolderFavoritesState';
@@ -45,18 +46,23 @@ export function activate (context: vscode.ExtensionContext) {
 	const folderState = new FolderFavoritesState(context);
 	const folderDialog = new FolderFavoritesDialog(context);
 	const folderProvider = new FolderFavoritesProvider(folderState);
-	subscriptions.push(vscode.window.createTreeView('l13DiffFavorites', { treeDataProvider: folderProvider }));
+	subscriptions.push(vscode.window.createTreeView('l13DiffFavorites', { treeDataProvider: folderProvider, showCollapseAll: true }));
 	subscriptions.push(FolderFavoritesState.onDidChange(() => folderProvider.refresh()));
 	subscriptions.push(favoritesState.onDidChangeFavorites(() => folderProvider.refresh()));
 
 	commands.register(context, {
 
-		'l13Diff.action.folderFavorite.add': async () => {
+		'l13Diff.action.folderFavorite.add': async (item?: FolderFavoriteGroupItem) => {
 
 			const path = await openFolder();
-			if (path) await folderDialog.add([path]);
+			if (path) await folderDialog.add([path], item?.group);
 
 		},
+
+		'l13Diff.action.folderFavorite.move': (item?: FolderFavoriteItem) => folderDialog.move(item?.fsPath),
+		'l13Diff.action.folderFavoriteGroup.add': () => folderDialog.createGroup(),
+		'l13Diff.action.folderFavoriteGroup.rename': (item?: FolderFavoriteGroupItem) => folderDialog.renameGroup(item?.group),
+		'l13Diff.action.folderFavoriteGroup.remove': (item?: FolderFavoriteGroupItem) => folderDialog.removeGroup(item?.group),
 
 		'l13Diff.action.folderFavorite.remove': async (item?: FolderFavoriteItem) => {
 

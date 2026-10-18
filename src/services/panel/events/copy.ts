@@ -52,12 +52,24 @@ export function init (currentDiffPanel: DiffPanel) {
 		
 	}, null, currentDiffPanel.disposables);
 	
-	currentDiffPanel.copy.onDidCopyFiles(({ data, from }) => {
+	currentDiffPanel.copy.onDidCopyFiles(({ data, from, to }) => {
+
+		if (data.diffs.some((diff) => !(from === 'A' ? diff.fileA : diff.fileB) || (from === 'A' ? diff.fileA : diff.fileB).type === 'folder')) {
+			currentDiffPanel.msg.send('refresh:comparison');
+			if (data.multi) currentDiffPanel.sendOthers('refresh:comparison', { path: to === 'A' ? data.pathA : data.pathB });
+			return;
+		}
 		
 		currentDiffPanel.msg.send(from === 'A' ? 'copy:left' : 'copy:right', data);
 		
 		if (data.multi) currentDiffPanel.sendOthers('update:multi', data);
 		
+	}, null, currentDiffPanel.disposables);
+
+	currentDiffPanel.copy.onDidRemoveDestination((file) => {
+
+		currentDiffPanel.output.log(`Removed destination-only ${file.type} "${file.fsPath}" during synchronization`);
+
 	}, null, currentDiffPanel.disposables);
 	
 	currentDiffPanel.copy.onInitMultiCopy(({ data, from }) => {

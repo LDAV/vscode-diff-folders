@@ -18,6 +18,12 @@ export function init ({ diff, leftVM, rightVM, panelVM, listVM }: DiffEventsInit
 	
 	msg.on('cancel', () => diff.enable());
 
+	msg.on('refresh:comparison', (data?: { path?: string }) => {
+
+		if (!data?.path || [listVM.diffResult.pathA, listVM.diffResult.pathB].includes(data.path)) diff.initCompare();
+
+	});
+
 	msg.on('favorite:folder', ({ fsPath, side }: { fsPath: string, side: string }) => {
 
 		if (panelVM.loading) return;

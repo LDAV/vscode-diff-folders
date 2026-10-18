@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to the "Diff Folders" extension will be documented in this file.
 
+## [1.4.1] - 2026-10-18
+
+### Added
+
+- Virtual groups for individual folder favorites, with creation, renaming, removal, and assignment from the sidebar or folder picker. Removing a group keeps its favorite folders ungrouped; existing favorites are preserved.
+
+### Changed
+
+- Split row metadata into separate aligned date/time and size cells, reserving space for row actions so they do not move the metadata.
+- Directional synchronization removes selected destination-only entries when the source side is empty; the empty cell offers a synchronization action. Deletion uses the configured trash preference and triggers a fresh comparison.
+- Folder copying now replaces the entire destination with the source, including all nested and excluded files, removes destination-only entries, and refreshes the comparison. The replacement is staged before swapping folders, with rollback on installation failure and rejection of overlapping source/destination paths.
+
 ## [1.4.0] - 2026-10-18
 
 First feature release of the [LDAV fork](https://github.com/LDAV/vscode-diff-folders), based on [Diff Folders by L13|RARY](https://github.com/L13/vscode-diff).

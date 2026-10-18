@@ -8,6 +8,13 @@ This fork is maintained at [LDAV/vscode-diff-folders](https://github.com/LDAV/vs
 
 ![Diff Folders](images/previews/preview.png)
 
+## What's new in Diff Folders 1.4.1
+
+- Organize favorite folders into virtual groups in the sidebar and both folder pickers.
+- Keep date/time and size in separate aligned cells beside the row actions.
+- Synchronize folders by replacing their entire contents, including nested folders, with rollback on replacement failure.
+- Synchronize selected destination-only entries by removing them when the source side is empty, respecting the trash preference.
+
 ## What's new in Diff Folders 1.4.0
 
 - Navigate one folder level at a time on both sides; use `↑ ..` beside Compare to go up.
@@ -74,6 +81,8 @@ Favorites are individual folders shared by both sides. Click the folder button b
 
 The Favorites sidebar lists individual folders. Its add button saves a folder; clicking an entry lets you choose the left or right side. Add Current Folders to Favorites saves both current folders separately. Folder paths from legacy comparison favorites are recovered automatically and deduplicated; the legacy data is retained.
 
+Favorite folders can be organized in virtual groups. Use **New Favorite Folder Group…** in the sidebar toolbar, then **Move Favorite Folder to Group…** on a favorite to assign it. Groups expand in the sidebar and open as sublists in the folder picker. Adding a folder while inside a group saves it there. A group can be renamed or removed through its context menu; removing it keeps its favorite folders in the ungrouped list. Choose **Ungrouped** when moving a favorite to take it out of a group. Groups organize favorites without moving folders on disk.
+
 ## Available Settings
 
 New panels show all file statuses by default, including unchanged and ignored entries. Dotfiles are visible except for macOS metadata files `.DS_Store` and `.DS_store`, which are excluded by default. Filters remain available when needed. Opening a panel starts with all statuses and file types visible and an empty search, without restoring previous filters.
@@ -82,7 +91,7 @@ New panels show all file statuses by default, including unchanged and ignored en
 * `l13Diff.showFileTime` - Show the modification time on both sides of the comparison (default: true).
 * `l13Diff.showFileSize` - Show file sizes on both sides of the comparison (default: true).
 
-Dates and times use the local format. These settings apply immediately to open panels. Folder sizes are not calculated.
+Dates and times use the local format. Each side has separate, aligned cells for modification date/time and file size, with a dedicated area for row actions before those cells. These settings apply immediately to open panels. Folder sizes are not calculated.
 
 File pairs marked as modified by the comparison have a light blue background (`#c5dfff`), following the active comparison settings. A different modification timestamp alone does not trigger highlighting. This highlighting is independent of the metadata visibility settings. Hover and selection backgrounds take precedence.
 
@@ -91,6 +100,10 @@ Folders also use the light blue background (`#c5dfff`) when they contain modifie
 All file and folder text is black (`#000`), including metadata and selected or hovered rows. Files and folders present on only one side have a pink background (`#ffc7c3`) on the existing side; the missing side stays empty.
 
 Copying a file preserves the source modification and access timestamps on the destination, including when overwriting an existing file. Creation time depends on the filesystem.
+
+Directional copy synchronizes the selected entries: an entry present in the source is copied to the destination; an entry missing from the source is deleted from the destination. Hovering the empty side offers a synchronization button for destination-only entries. Deletion follows the existing trash setting and the copy confirmation describes destination-only deletion.
+
+Copying a folder replaces the destination folder completely, removing destination-only entries. The entire source folder is copied recursively, including files hidden by exclusion patterns; exclusions affect comparison scanning, not a complete folder copy. The replacement is prepared before the existing destination is moved aside, with rollback if installing the replacement fails. Copying between identical or nested folders is rejected. The comparison refreshes after folder copying.
 
 * `l13Diff.maxRecentlyUsed` - Defines the max length of recently used entries in the menu.
 * `l13Diff.openToSide` - Set true if a diff or file should open to the side.

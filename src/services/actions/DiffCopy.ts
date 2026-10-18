@@ -6,12 +6,12 @@ import * as vscode from 'vscode';
 
 import { formatAmount } from '../../@l13/formats';
 import { pluralFiles } from '../../@l13/units/files';
-import { copyFile, copySymbolicLink, createDirectory, lstat } from '../@l13/fse';
+import { replaceDirectory } from '../@l13/directories';
+import { copyFile, copySymbolicLink, lstat } from '../@l13/fse';
 
 import type {
 	CopyFileEvent,
 	CopyFilesEvent,
-	CopyFilesJob,
 	Diff,
 	DiffCopyMessage,
 	DiffFile,
@@ -38,6 +38,9 @@ export class DiffCopy {
 	
 	private _onDidCopyFile: vscode.EventEmitter<CopyFileEvent> = new vscode.EventEmitter<CopyFileEvent>();
 	public readonly onDidCopyFile: vscode.Event<CopyFileEvent> = this._onDidCopyFile.event;
+
+	private _onDidRemoveDestination: vscode.EventEmitter<DiffFile> = new vscode.EventEmitter<DiffFile>();
+	public readonly onDidRemoveDestination: vscode.Event<DiffFile> = this._onDidRemoveDestination.event;
 	
 	private _onDidCopyFiles: vscode.EventEmitter<CopyFilesEvent> = new vscode.EventEmitter<CopyFilesEvent>();
 	public readonly onDidCopyFiles: vscode.Event<CopyFilesEvent> = this._onDidCopyFiles.event;
@@ -58,8 +61,8 @@ export class DiffCopy {
 		
 		if (stat.isDirectory()) {
 			if (!statDest || statDest.isDirectory()) {
-				if (!statDest) createDirectory(dest);
-				return Promise.resolve(undefined);
+				await replaceDirectory(file.fsPath, dest);
+				return undefined;
 			}
 			return Promise.reject(new Error(`'${dest}' exists, but is not a folder!`));
 		} else if (stat.isFile()) {
@@ -84,14 +87,18 @@ export class DiffCopy {
 		
 		if (confirmCopy && !data.multi) {
 			const buttonCopyDontShowAgain = 'Copy, don\'t show again';
-			const text = `Copy ${formatAmount(length, pluralFiles)} to "${(<any>data)[`path${to}`]}"?`;
+			const replacingFolders = data.diffs.some((diff) => (from === 'A' ? diff.fileA : diff.fileB)?.type === 'folder');
+			const notice = replacingFolders ? ' Destination folders will be replaced completely, including removal of destination-only files.' : '';
+			const deleting = data.diffs.some((diff) => !(from === 'A' ? diff.fileA : diff.fileB));
+			const deletionNotice = deleting ? ' Selected entries missing from the source will be deleted from the destination.' : '';
+			const text = `Copy ${formatAmount(length, pluralFiles)} to "${(<any>data)[`path${to}`]}"?${notice}${deletionNotice}`;
 			const value = await dialogs.confirm(text, 'Copy', buttonCopyDontShowAgain);
 				
 			if (value) {
 				if (value === buttonCopyDontShowAgain) settings.update('confirmCopy', false);
-				this.copyFromTo(data, from, to);
+				await this.copyFromTo(data, from, to);
 			} else this._onDidCancel.fire(undefined);
-		} else this.copyFromTo(data, from, to);
+		} else await this.copyFromTo(data, from, to);
 		
 	}
 	
@@ -111,59 +118,73 @@ export class DiffCopy {
 		
 	}
 	
-	private copyFromTo (data: DiffCopyMessage, from: 'A' | 'B', to: 'A' | 'B') {
-		
+	private async copyFromTo (data: DiffCopyMessage, from: 'A' | 'B', to: 'A' | 'B') {
+
 		const folderTo = to === 'A' ? data.pathA : data.pathB;
-		const diffs: Diff[] = data.diffs;
-		const job: CopyFilesJob = {
-			error: null,
-			tasks: diffs.length,
-			done: () => this._onDidCopyFiles.fire({ data, from, to }),
-		};
-		
-		diffs.forEach(async (diff: Diff) => {
-			
-			const fileFrom: DiffFile = from === 'A' ? diff.fileA : diff.fileB;
-			
-			if (fileFrom) {
-				const fsPath = fileFrom.fsPath;
-				
-				if (await lstat(fsPath)) {
-					let fileTo = to === 'A' ? diff.fileA : diff.fileB;
-					const relative = fileTo?.relative || fileFrom.relative;
-					const dest = path.join(folderTo, relative);
-					let copy: boolean = null;
-					
-					if (!fileTo) copy = await existsCaseInsensitiveFileAndCopy(fsPath, folderTo, relative, dest);
-					
-					if (copy !== false) {
-						try {
-							await this.copy(fileFrom, dest);
-							
-							if (copy === null) {
-								if (diff.status !== 'ignored') diff.status = 'unchanged';
-								if (!fileTo) {
-									fileTo = copyDiffFile(fileFrom, folderTo, dest);
-									if (to === 'A') diff.fileA = fileTo;
-									else diff.fileB = fileTo;
-								}
-								fileTo.stat = await lstat(dest);
-							}
-							
-							this._onDidCopyFile.fire({ from: fileFrom, to: fileTo });
-						} catch (error) {
-							vscode.window.showErrorMessage(formatError(error));
-						}
-					}
-				}
-			}
-			
-			job.tasks--;
-			
-			if (!job.tasks) job.done();
-			
+		function sourceOf (diff: Diff) {
+
+			return from === 'A' ? diff.fileA : diff.fileB;
+
+		}
+		const folders = data.diffs.map((diff) => sourceOf(diff) || (to === 'A' ? diff.fileA : diff.fileB)).filter((file) => file?.type === 'folder');
+		const diffs = data.diffs.filter((diff) => {
+
+			const entry = sourceOf(diff) || (to === 'A' ? diff.fileA : diff.fileB);
+			return entry && !folders.some((folder) => entry !== folder && entry.relative.startsWith(folder.relative + path.sep));
+
 		});
-		
+
+		for (const diff of diffs) {
+			const fileFrom = sourceOf(diff);
+			try {
+				let fileTo = to === 'A' ? diff.fileA : diff.fileB;
+				if (!fileFrom) {
+					const folderFrom = from === 'A' ? data.pathA : data.pathB;
+					let sourceExists = false;
+					try {
+						await fs.promises.lstat(path.join(folderFrom, fileTo.relative));
+						sourceExists = true;
+					} catch (error) {
+						if (error.code !== 'ENOENT' && error.code !== 'ENOTDIR') throw error;
+					}
+					if (sourceExists) {
+						throw new Error('The source entry now exists. Refresh the comparison before synchronizing.');
+					}
+					const target = path.resolve(folderTo, fileTo.relative);
+					const targetRelative = path.relative(path.resolve(folderTo), target);
+					if (!targetRelative || targetRelative === '..' || targetRelative.startsWith(`..${path.sep}`) || path.isAbsolute(targetRelative)) {
+						throw new Error('The synchronization target must be inside the destination folder.');
+					}
+					const sourceRoot = await fs.promises.realpath(folderFrom);
+					const targetPath = await fs.promises.realpath(target);
+					const sourceRelative = path.relative(targetPath, sourceRoot);
+					if (!sourceRelative || sourceRelative !== '..' && !sourceRelative.startsWith(`..${path.sep}`) && !path.isAbsolute(sourceRelative)) {
+						throw new Error('The synchronization target must not contain the source folder.');
+					}
+					await vscode.workspace.fs.delete(vscode.Uri.file(target), { recursive: true, useTrash: settings.enableTrash() });
+					this._onDidRemoveDestination.fire(fileTo);
+					continue;
+				}
+				const relative = fileTo?.relative || fileFrom.relative;
+				const dest = path.join(folderTo, relative);
+				const copy = !fileTo ? await existsCaseInsensitiveFileAndCopy(fileFrom.fsPath, folderTo, relative, dest) : null;
+				if (copy === false) continue;
+
+				await this.copy(fileFrom, dest);
+				if (!fileTo) {
+					fileTo = copyDiffFile(fileFrom, folderTo, dest);
+					if (to === 'A') diff.fileA = fileTo;
+					else diff.fileB = fileTo;
+				}
+				fileTo.stat = await lstat(dest);
+				if (copy === null && diff.status !== 'ignored') diff.status = 'unchanged';
+				this._onDidCopyFile.fire({ from: fileFrom, to: fileTo });
+			} catch (error) {
+				vscode.window.showErrorMessage(formatError(error));
+			}
+		}
+		this._onDidCopyFiles.fire({ data, from, to });
+
 	}
 	
 }

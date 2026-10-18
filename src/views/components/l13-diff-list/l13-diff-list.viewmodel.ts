@@ -294,9 +294,9 @@ export class L13DiffListViewModel extends ViewModel {
 		
 	}
 	
-	public getCopyListByIds (ids: string[], from: 'left' | 'right'): DiffCopyMessage {
+	public getCopyListByIds (ids: string[]): DiffCopyMessage {
 		
-		const items = ids.map((id) => this.map[id]).filter((diff: Diff) => from === 'left' && diff.fileA || from === 'right' && diff.fileB);
+		const items = ids.map((id) => this.map[id]).filter((diff: Diff) => diff && (diff.fileA || diff.fileB));
 		
 		return {
 			diffs: items,
@@ -362,7 +362,7 @@ export class L13DiffListViewModel extends ViewModel {
 	
 	public copy (ids: string[], from: 'left' | 'right') {
 		
-		const diffResult = this.getCopyListByIds(ids, from);
+		const diffResult = this.getCopyListByIds(ids);
 		
 		if (diffResult.diffs.length) msg.send<DiffCopyMessage>(`copy:${from}`, diffResult);
 		else this.dispatchEvent('cancel');
@@ -385,7 +385,7 @@ export class L13DiffListViewModel extends ViewModel {
 		
 		if (from === 'left' && this.diffResult.pathA === data.pathA
 		|| from === 'right' && this.diffResult.pathB === data.pathB) {
-			const diffCopy: DiffCopyMessage = this.getCopyListByIds(data.ids, from);
+			const diffCopy: DiffCopyMessage = this.getCopyListByIds(data.ids);
 			if (diffCopy.diffs.length) {
 				diffCopy.multi = true;
 				msg.send<DiffCopyMessage>(`copy:${from}`, diffCopy);

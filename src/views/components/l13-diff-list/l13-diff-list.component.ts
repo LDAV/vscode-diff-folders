@@ -867,19 +867,29 @@ Modified: ${formatDate(new Date(stat.mtime || stat.mtimeMs))}`;
 			const metadata = document.createElement('SPAN');
 			metadata.classList.add('-metadata');
 			const modified = new Date(file.stat.mtime || file.stat.mtimeMs);
+			const dateTime = document.createElement('SPAN');
+			dateTime.classList.add('-date-time');
+			dateTime.title = `Modified: ${formatDate(modified)}`;
+			metadata.appendChild(dateTime);
 			const values = [
 				['date', modified.toLocaleDateString()],
 				['time', modified.toLocaleTimeString()],
 			];
-			if (type === 'file') values.push(['size', formatFileSize(file.stat.size, true)]);
 			values.forEach(([name, value]) => {
 
 				const field = document.createElement('SPAN');
 				field.classList.add(`-${name}`);
 				field.textContent = value;
-				metadata.appendChild(field);
+				dateTime.appendChild(field);
 
 			});
+			const size = document.createElement('SPAN');
+			size.classList.add('-size');
+			if (type === 'file') {
+				size.textContent = formatFileSize(file.stat.size, true);
+				size.title = formatFileSize(file.stat.size);
+			}
+			metadata.appendChild(size);
 			column.appendChild(metadata);
 		}
 

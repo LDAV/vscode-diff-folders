@@ -2,7 +2,7 @@
 	"name": "l13-diff",
 	"displayName": "Diff Folders",
 	"description": "Compare two folders in Visual Studio Code. A fork of Diff Folders by L13|RARY.",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"publisher": "L13RARY",
 	"license": "SEE LICENSE IN LICENSE.md",
 	"homepage": "https://github.com/LDAV/vscode-diff-folders#readme",
@@ -48,7 +48,11 @@
 		"onWebviewPanel:l13DiffPanel",
 		"onCommand:l13Diff.action.folderFavorite.add",
 		"onCommand:l13Diff.action.folderFavorite.remove",
-		"onCommand:l13Diff.action.folderFavorite.select"
+		"onCommand:l13Diff.action.folderFavorite.select",
+		"onCommand:l13Diff.action.folderFavorite.move",
+		"onCommand:l13Diff.action.folderFavoriteGroup.add",
+		"onCommand:l13Diff.action.folderFavoriteGroup.rename",
+		"onCommand:l13Diff.action.folderFavoriteGroup.remove"
 	],
 	"extensionKind": [
 		"workspace",
@@ -464,6 +468,25 @@
 			{
 				"command": "l13Diff.action.folderFavorite.remove",
 				"title": "Remove Favorite Folder",
+				"icon": "$(trash)"
+			},
+			{
+				"command": "l13Diff.action.folderFavorite.move",
+				"title": "Move Favorite Folder to Group…",
+				"icon": "$(move)"
+			},
+			{
+				"command": "l13Diff.action.folderFavoriteGroup.add",
+				"title": "New Favorite Folder Group…",
+				"icon": "$(new-folder)"
+			},
+			{
+				"command": "l13Diff.action.folderFavoriteGroup.rename",
+				"title": "Rename Favorite Folder Group…"
+			},
+			{
+				"command": "l13Diff.action.folderFavoriteGroup.remove",
+				"title": "Remove Favorite Folder Group",
 				"icon": "$(trash)"
 			}
 		],
@@ -949,6 +972,11 @@
 					"command": "l13Diff.action.history.clear",
 					"when": "view == l13DiffHistory",
 					"group": "navigation@1"
+				},
+				{
+					"command": "l13Diff.action.folderFavoriteGroup.add",
+					"when": "view == l13DiffFavorites",
+					"group": "navigation@3"
 				}
 			],
 			"view/item/context": [
@@ -1056,6 +1084,26 @@
 					"command": "l13Diff.action.folderFavorite.remove",
 					"group": "inline",
 					"when": "view == l13DiffFavorites && viewItem == folderFavorite"
+				},
+				{
+					"command": "l13Diff.action.folderFavorite.move",
+					"when": "view == l13DiffFavorites && viewItem == folderFavorite",
+					"group": "2_groups"
+				},
+				{
+					"command": "l13Diff.action.folderFavorite.add",
+					"when": "view == l13DiffFavorites && viewItem == folderFavoriteGroup",
+					"group": "1_add"
+				},
+				{
+					"command": "l13Diff.action.folderFavoriteGroup.rename",
+					"when": "view == l13DiffFavorites && viewItem == folderFavoriteGroup",
+					"group": "2_groups"
+				},
+				{
+					"command": "l13Diff.action.folderFavoriteGroup.remove",
+					"when": "view == l13DiffFavorites && viewItem == folderFavoriteGroup",
+					"group": "3_remove"
 				}
 			],
 			"editor/title": [

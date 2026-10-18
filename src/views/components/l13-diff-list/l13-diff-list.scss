@@ -7,6 +7,7 @@
 
 l13-diff-list-content {
 	display: block;
+	min-width: calc(492px + var(--date-time-width, 0px) + var(--date-time-width, 0px) + var(--size-width, 0px) + var(--size-width, 0px));
 	transform: translate3d(0, 0, 0);
 	width: 100%;
 	
@@ -203,8 +204,9 @@ l13-diff-list-row {
 	
 l13-diff-list-file {
 	box-sizing: border-box;
-	display: flex;
-	justify-content: space-between;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 88px var(--date-time-width, 0px) var(--size-width, 0px);
+	grid-template-rows: 16px;
 	overflow: hidden;
 	padding: 2px 3px 4px 36px;
 	position: relative;
@@ -304,6 +306,9 @@ l13-diff-list-file {
 	}
 	
 	div.-path {
+		grid-column: 1;
+		grid-row: 1;
+		min-width: 0;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: pre;
@@ -332,20 +337,60 @@ l13-diff-list-file {
 }
 
 l13-diff-list-file .-metadata {
-	display: flex;
-	flex-shrink: 0;
+	display: contents;
+}
+
+l13-diff-list-file .-date-time,
+l13-diff-list-file .-metadata > .-size {
+	border-left: 1px solid rgba(0, 0, 0, .15);
+	box-sizing: border-box;
+	display: none;
 	font-size: 11px;
 	font-variant-numeric: tabular-nums;
+	grid-row: 1;
+	padding: 0 8px;
 	white-space: nowrap;
+}
+
+l13-diff-list-file .-date-time {
+	gap: 6px;
+	grid-column: 3;
 
 	> span {
 		display: none;
-		padding-left: 12px;
 	}
 }
 
-l13-diff-list-content.-show-date .-metadata > .-date,
-l13-diff-list-content.-show-time .-metadata > .-time,
+l13-diff-list-file .-metadata > .-size {
+	grid-column: 4;
+	text-align: right;
+}
+
+l13-diff-list-file l13-diff-context {
+	grid-column: 2;
+	grid-row: 1;
+}
+
+l13-diff-list-content.-show-date,
+l13-diff-list-content.-show-time {
+	--date-time-width: 86px;
+}
+
+l13-diff-list-content.-show-date.-show-time {
+	--date-time-width: 150px;
+}
+
+l13-diff-list-content.-show-size {
+	--size-width: 86px;
+}
+
+l13-diff-list-content.-show-date .-date-time,
+l13-diff-list-content.-show-time .-date-time {
+	display: flex;
+}
+
+l13-diff-list-content.-show-date .-date-time > .-date,
+l13-diff-list-content.-show-time .-date-time > .-time,
 l13-diff-list-content.-show-size .-metadata > .-size {
 	display: inline;
 }

@@ -2,7 +2,7 @@
 
 import type { ContextEventsInit } from '../../../../types';
 
-import { msg } from '../../../common';
+import { msg, setLabel } from '../../../common';
 
 //	Variables __________________________________________________________________
 
@@ -86,10 +86,13 @@ export function init ({ context, list }: ContextEventsInit) {
 		
 		if (element) {
 			const contextParentNode = context.parentNode;
-			if (element.childNodes.length) {
+			const row = element.closest('l13-diff-list-row');
+			const diff = row && list.viewmodel.getDiffById(row.getAttribute('data-id'));
+			if (diff && (diff.fileA || diff.fileB)) {
 				if (contextParentNode !== element) {
 					if (contextParentNode) context.remove();
 					const viewmodel = context.viewmodel;
+					setLabel(context.buttonCopy, element.hasAttribute('data-fs-path') ? 'Copy' : 'Synchronize: remove destination-only entry');
 					switch (element.getAttribute('data-type')) {
 						case 'file':
 						case 'symlink':
@@ -101,6 +104,7 @@ export function init ({ context, list }: ContextEventsInit) {
 							break;
 						default:
 							viewmodel.disableAll();
+							if (!element.hasAttribute('data-fs-path')) viewmodel.copyDisabled = false;
 					}
 					element.appendChild(context);
 				}
