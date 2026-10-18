@@ -8,14 +8,21 @@ This fork is maintained at [LDAV/vscode-diff-folders](https://github.com/LDAV/vs
 
 ![Diff Folders](images/previews/preview.png)
 
-## What's new in Diff Folders 1.3.0
+## What's new in Diff Folders 1.4.0
 
-- Added `Export Favorites` to export favorites and groups as a JSON file.
-- Added `Import Favorites` to import favorites and groups from a JSON file.
+- Navigate one folder level at a time on both sides; use `↑ ..` beside Compare to go up.
+- Choose individual favorite folders independently for the left and right sides.
+- Display modification date, time, and compact file sizes by default.
+- Highlight modified files and folders containing differences in light blue (`#c5dfff`). Entries present on only one side use pink (`#ffc7c3`) on that side, with the opposite cell empty. File and folder text is black (`#000`).
+- Start with all statuses visible. Explicit exclusions remain hidden even with Show Ignored Files enabled; `.DS_Store` and `.DS_store` are excluded by default.
+- Preserve modification and access timestamps when copying files.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full release notes. Screenshots below are inherited from the original project and may differ from this fork's interface.
 
 ## Index
 
 1. [Available Commands](#available-commands)
+1. [Favorite Folders](#favorite-folders)
 1. [Available Settings](#available-settings)
 1. [Predefined Variables](#predefined-variables)
 1. [Mouse and Keyboard Shortcuts](#mouse-and-keyboard-shortcuts)
@@ -52,10 +59,14 @@ This fork is maintained at [LDAV/vscode-diff-folders](https://github.com/LDAV/vs
 
 * `New Diff Panel` - Open the diff panel.
 * `Clear History` - Clear the history of recently used files, folders and previous comparisons.
-* `Delete All Favorites` - Delete all favorites.
+* `Delete All Favorites` - Remove all saved favorite folders.
 * `Show Output Channel` - Open the output channel for the current comparison.
-* `Export Favorites` - Export all favorites and groups to a JSON file.
-* `Import Favorites` - Import favorites and groups from a JSON file. The limit is 1000 entries.
+* `Add Favorite Folder…` - Save an individual folder in the favorites list.
+* `Select Folder for Comparison…` - Choose a favorite folder and its destination side.
+* `Remove Favorite Folder` - Remove a folder from favorites.
+* `Add Current Folders to Favorites` - Save the current left and right folders separately.
+* `Export Legacy Comparison Favorites…` - Export the original comparison favorites and groups to JSON.
+* `Import Legacy Comparison Favorites…` - Import legacy comparison favorites and groups; the limit is 1000 entries.
 
 ## Favorite folders
 
@@ -66,7 +77,6 @@ The Favorites sidebar lists individual folders. Its add button saves a folder; c
 ## Available Settings
 
 New panels show all file statuses by default, including unchanged and ignored entries. Dotfiles are visible except for macOS metadata files `.DS_Store` and `.DS_store`, which are excluded by default. Filters remain available when needed. Opening a panel starts with all statuses and file types visible and an empty search, without restoring previous filters.
-
 
 * `l13Diff.showFileDate` - Show the modification date on both sides of the comparison (default: true).
 * `l13Diff.showFileTime` - Show the modification time on both sides of the comparison (default: true).
@@ -229,7 +239,7 @@ If the key bindings don't work, please check `Preferences -> Keyboard Shortcuts`
 
 #### All Platforms
 
-* `Click` - Select a file or folder in the list view.
+* `Click` - Select a file in the list view; folders present on both sides open on a single click.
 * `Shift + Click` - Add files and folders from the last selected item to the current selected item in the list view.
 * `Click` on a folder present on both sides - Navigate into that folder on both sides and compare it in the current panel. Use Ctrl/Cmd or Shift with a click to select folders instead.
 * `↑ ..` next to Compare - Open the parent folders on both sides and run the comparison again.
@@ -333,36 +343,15 @@ If `l13Diff.ignoreByteOrderMark`, `l13Diff.ignoreEndOfLine` or `l13Diff.ignoreTr
 
 ### Favorites
 
-* `Click` - Start the favorite diff immediately in the current active panel. If `l13Diff.openInNewDiffPanel` is true the comparison opens in a new diff panel.
+* `Click` on a favorite folder - Choose whether to use it as the left or right folder in the current diff panel. This updates only the selected side; press Compare when both folders are ready.
+* `New Diff Panel` - Open a new comparison panel.
+* `Add Favorite Folder…` - Browse for a folder and save it as an individual favorite.
+* `Select Folder for Comparison…` - Choose the side for the selected folder.
+* `Remove Favorite Folder` - Remove the selected folder from the favorites list without deleting it from disk.
 
-#### Favorites Context Icons
+The folder buttons beside the two input paths open the same favorite folder list. Each picker also offers actions to add a new folder, save the current folder, and remove a favorite. Alt-click opens the file picker.
 
-* `New Diff Panel` - Open a new panel.
-* `New Group` - Add a new group.
-* `Collapse All` - Collapse all groups.
-
-#### Favorites Context Menu
-
-* `Compare` - Start the favorite diff immediately in the current active panel. Ignores `l13Diff.openInNewDiffPanel`.
-* `Compare in New Panel` - Start the favorite diff immediately in a new diff panel. Ignores `l13Diff.openInNewDiffPanel`.
-* `Reveal in Finder/Explorer` - Reveal the left or right file/folder in the finder/explorer. Requires version 0.20.0 of [Projects](https://marketplace.visualstudio.com/items?itemName=L13RARY.l13-projects).
-* `Open in Integrated Terminal` - Open the left or right path in the integrated terminal. Requires version 0.20.0 of [Projects](https://marketplace.visualstudio.com/items?itemName=L13RARY.l13-projects).
-* `Open Workspace` - Open the left or right path as a workspace. Requires version 0.20.0 of [Projects](https://marketplace.visualstudio.com/items?itemName=L13RARY.l13-projects).
-* `Open as Workspace` - Open the two paths as a workspace. Requires version 0.20.0 of [Projects](https://marketplace.visualstudio.com/items?itemName=L13RARY.l13-projects).
-* `Add Folders to Workspace` - Add the paths to the current workspace. Requires version 0.20.0 of [Projects](https://marketplace.visualstudio.com/items?itemName=L13RARY.l13-projects).
-* `Add to Group` - Add a favorite diff to a group.
-* `Copy Left Path` - Copy the left path of the favorite diff to the clipboard.
-* `Copy Right Path` - Copy the right path of the favorite diff to the clipboard.
-* `Remove from Group` - Remove a favorite diff from a group.
-* `Rename` - Change the name of a favorite diff.
-* `Delete` - Delete a favorite diff.
-
-#### Favorite Groups Context Menu
-
-* `Compare All` - Compare all favorite diffs of a group at once.
-* `Compare All Side By Side` - Compare all favorite diffs of a group at once side by side.
-* `Rename` - Change the name of a favorite group.
-* `Delete` - Delete a favorite group. Optionally you can delete also all favorites in the group.
+Legacy comparison favorites and groups are retained for compatibility. Their import/export commands operate on legacy data, rather than on the individual folder favorites introduced in 1.4.0.
 
 ### History
 
@@ -381,7 +370,7 @@ If `l13Diff.ignoreByteOrderMark`, `l13Diff.ignoreEndOfLine` or `l13Diff.ignoreTr
 * `Open Workspace` [2] - Open the left or right path as a workspace. Requires version 0.20.0 of [Projects](https://marketplace.visualstudio.com/items?itemName=L13RARY.l13-projects).
 * `Open as Workspace` [2] - Open the two paths as a workspace. Requires version 0.20.0 of [Projects](https://marketplace.visualstudio.com/items?itemName=L13RARY.l13-projects).
 * `Add Folders to Workspace` [2] - Add the paths to the current workspace. Requires version 0.20.0 of [Projects](https://marketplace.visualstudio.com/items?itemName=L13RARY.l13-projects).
-* `Add to Favorites` - Add a previous comparison to favorites.
+* `Add to Favorites` - Save a previous comparison in the legacy comparison favorites.
 * `Copy Left Path` - Copy the left path of the previous comparison to the clipboard.
 * `Copy Right Path` - Copy the right path of the previous comparison to the clipboard.
 * `Delete` - Delete the previous comparison from the history.

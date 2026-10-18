@@ -1,6 +1,38 @@
 # Change Log
 All notable changes to the "Diff Folders" extension will be documented in this file.
 
+## [1.4.0] - 2026-10-18
+
+First feature release of the [LDAV fork](https://github.com/LDAV/vscode-diff-folders), based on [Diff Folders by L13|RARY](https://github.com/L13/vscode-diff).
+
+### Added
+
+- Folder navigation showing only the current folder's files and immediate subfolders, with synchronized navigation on both sides.
+- A `↑ ..` button to open the parent folders and compare them on both sides.
+- Modification date, time, and compact file sizes, visible by default and individually configurable.
+- Light blue highlighting (`#c5dfff`) for modified file pairs and folders containing changed files at any depth.
+- Pink highlighting (`#ffc7c3`) only on the existing side of files or folders missing from the other side; all file and folder text uses black (`#000`).
+- Individual folder favorites, selectable independently for the left and right sides, with add/remove actions and a folder-based sidebar.
+- Recovery and deduplication of existing favorite folder paths while preserving legacy comparison favorite data.
+
+### Changed
+
+- New panels show all file statuses and file types, with an empty search, instead of restoring previous filters.
+- `.DS_Store` and `.DS_store` are excluded by default; other dotfiles remain visible unless excluded explicitly.
+- Explicit `l13Diff.exclude` patterns omit matching files and folders from scanning, regardless of Show Ignored Files.
+- File copying preserves source modification and access timestamps, including when overwriting a destination.
+- Extension metadata and README identify this project as a fork and link to its repository and issue tracker.
+
+### Fixed
+
+- Prevented a folder navigation click from opening a file in the newly loaded list on double-click.
+- Corrected workspace settings detection for single-folder workspaces.
+- File copies now wait for destination writing and timestamp updates to finish and propagate write errors.
+
+### Removed
+
+- Removed `l13Diff.hideDotFiles`; use `l13Diff.exclude` with `**/.*` to hide dotfiles and dotfolders.
+
 ## [1.3.11] - 2025-06-30
 
 ### Fixed
