@@ -28,8 +28,11 @@ import type { L13DiffCompareViewModel } from './l13-diff-compare.viewmodel';
 })
 export class L13DiffCompareComponent extends L13Element<L13DiffCompareViewModel> {
 	
-	@L13Query('button')
+	@L13Query('#compare')
 	private button: HTMLButtonElement;
+
+	@L13Query('#parent')
+	private parentButton: HTMLButtonElement;
 	
 	public constructor () {
 		
@@ -38,6 +41,7 @@ export class L13DiffCompareComponent extends L13Element<L13DiffCompareViewModel>
 		setLabel(this.button, 'Compare');
 		
 		this.button.addEventListener('click', ({ altKey }) => this.dispatchCustomEvent('compare', { altKey }));
+		this.parentButton.addEventListener('click', () => this.dispatchCustomEvent('parent'));
 		
 		disableContextMenu(this);
 		

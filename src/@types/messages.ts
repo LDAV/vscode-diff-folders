@@ -77,6 +77,9 @@ export type DiffPreviewMessage = {
 
 export type DiffPanelSettings = {
 	enablePreview: boolean,
+	showFileDate: boolean,
+	showFileTime: boolean,
+	showFileSize: boolean,
 };
 
 export type DiffPanelStateMessage = {

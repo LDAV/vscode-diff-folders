@@ -94,6 +94,10 @@ l13-diff-list-row {
 	outline-offset: -1px;
 	width: 100%;
 	
+	&.-content-different {
+		background: #c5dfff;
+	}
+
 	&:hover {
 		background: var(--vscode-list-hoverBackground);
 		color: var(--vscode-list-hoverForeground);
@@ -324,5 +328,42 @@ l13-diff-list-file {
 			opacity: 0.5;
 			padding-left: 5px;
 		}
+	}
+}
+
+l13-diff-list-file .-metadata {
+	display: flex;
+	flex-shrink: 0;
+	font-size: 11px;
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+
+	> span {
+		display: none;
+		padding-left: 12px;
+	}
+}
+
+l13-diff-list-content.-show-date .-metadata > .-date,
+l13-diff-list-content.-show-time .-metadata > .-time,
+l13-diff-list-content.-show-size .-metadata > .-size {
+	display: inline;
+}
+
+l13-diff-list-row l13-diff-list-file {
+	color: #000 !important;
+
+	span {
+		color: #000 !important;
+		opacity: 1 !important;
+	}
+}
+
+l13-diff-list-row l13-diff-list-file.-only-side {
+	background: #ffc7c3;
+
+	&::before {
+		background: #000 !important;
+		opacity: 1 !important;
 	}
 }

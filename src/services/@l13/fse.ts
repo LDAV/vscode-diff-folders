@@ -28,25 +28,19 @@ export function createDirectory (pathname: string) {
 	
 }
 
-export function copyFile (sourcePath: string, destPath: string): Promise<undefined | Error> {
+export async function copyFile (sourcePath: string, destPath: string): Promise<undefined | Error> {
 	
 	destPath = path.resolve(sourcePath, destPath);
+	const stat = await fs.promises.stat(sourcePath);
 	
 	const dirname = path.dirname(destPath);
 	
 	if (!fs.existsSync(dirname)) createDirectory(dirname);
 	
-	return new Promise((resolve, reject) => {
-		
-		const source = fs.createReadStream(sourcePath);
-		const dest = fs.createWriteStream(destPath);
-		
-		source.pipe(dest);
-		
-		source.on('error', (error: Error) => reject(error));
-		source.on('end', () => resolve(undefined));
-		
-	});
+	await fs.promises.copyFile(sourcePath, destPath);
+	await fs.promises.utimes(destPath, stat.atimeMs / 1000, stat.mtimeMs / 1000);
+
+	return undefined;
 	
 }
 
@@ -211,6 +205,13 @@ function _walktree (job: WalkTreeJob, cwd: string, relative = '') {
 		
 		names.forEach((name) => {
 			
+			const currentRelative = path.join(relative, name);
+			if (job.ignore?.test(currentRelative)) {
+				job.tasks--;
+				if (!job.tasks) job.done();
+				return;
+			}
+
 			const pathname = path.join(dirname, name);
 			
 			fs.lstat(pathname, (statError, stat) => {
@@ -220,9 +221,8 @@ function _walktree (job: WalkTreeJob, cwd: string, relative = '') {
 					if (statError) return job.done(statError);
 				}
 				
-				const currentRelative = path.join(relative, name);
 				let currentDirname = path.dirname(currentRelative);
-				let ignore = job.ignore?.test(currentRelative);
+				let ignore = false;
 				
 				currentDirname = currentDirname === '.' ? '' : currentDirname + path.sep;
 				

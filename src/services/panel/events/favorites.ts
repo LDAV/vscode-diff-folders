@@ -2,9 +2,7 @@
 
 import type { DiffFavoriteMessage } from '../../../types';
 
-import { FavoritesDialog } from '../../dialogs/FavoritesDialog';
-
-import { FavoritesState } from '../../states/FavoritesState';
+import { FolderFavoritesDialog } from '../../dialogs/FolderFavoritesDialog';
 
 import type { DiffPanel } from '../DiffPanel';
 
@@ -20,12 +18,11 @@ import type { DiffPanel } from '../DiffPanel';
 
 export function init (currentDiffPanel: DiffPanel) {
 	
-	const favoritesState = FavoritesState.create(currentDiffPanel.context);
-	const favoritesDialog = FavoritesDialog.create(favoritesState);
+	const favoritesDialog = new FolderFavoritesDialog(currentDiffPanel.context);
 	
-	currentDiffPanel.msg.on('save:favorite', (data: DiffFavoriteMessage) => {
+	currentDiffPanel.msg.on('save:favorite', async (data: DiffFavoriteMessage) => {
 		
-		favoritesDialog.add(data.pathA, data.pathB);
+		await favoritesDialog.add([data.pathA, data.pathB]);
 		
 	});
 	

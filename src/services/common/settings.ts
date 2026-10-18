@@ -121,7 +121,11 @@ function loadSettingsExclude (pathname: string): string[] {
 
 function useWorkspaceSettings (pathname: string): boolean {
 	
-	return vscode.workspace.workspaceFile && vscode.workspace.workspaceFolders.some((folder) => pathname.startsWith(folder.uri.fsPath));
+	return !!vscode.workspace.workspaceFolders?.some((folder) => {
+
+		return pathname === folder.uri.fsPath || pathname.startsWith(folder.uri.fsPath + path.sep);
+
+	});
 	
 }
 

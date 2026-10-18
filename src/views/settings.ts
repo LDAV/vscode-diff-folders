@@ -12,6 +12,9 @@ const l13Settings: DiffPanelSettings = (<any>window).l13Settings;
 
 msg.on('change:settings', (settings: DiffPanelSettings) => {
 	
+	if (typeof settings.showFileDate === 'boolean') showFileDate = settings.showFileDate;
+	if (typeof settings.showFileTime === 'boolean') showFileTime = settings.showFileTime;
+	if (typeof settings.showFileSize === 'boolean') showFileSize = settings.showFileSize;
 	if (typeof settings.enablePreview === 'boolean') enablePreview = settings.enablePreview;
 	
 });
@@ -20,5 +23,9 @@ msg.on('change:settings', (settings: DiffPanelSettings) => {
 
 export let enablePreview = l13Settings.enablePreview;
 
-//	Functions __________________________________________________________________
 
+export let showFileDate = l13Settings.showFileDate;
+export let showFileTime = l13Settings.showFileTime;
+export let showFileSize = l13Settings.showFileSize;
+
+//	Functions __________________________________________________________________

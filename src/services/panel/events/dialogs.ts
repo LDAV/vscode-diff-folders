@@ -1,6 +1,7 @@
 //	Imports ____________________________________________________________________
 
 import * as dialogs from '../../common/dialogs';
+import { FolderFavoritesDialog } from '../../dialogs/FolderFavoritesDialog';
 
 import type { DiffPanel } from '../DiffPanel';
 
@@ -15,6 +16,8 @@ import type { DiffPanel } from '../DiffPanel';
 //	Exports ____________________________________________________________________
 
 export function init (currentDiffPanel: DiffPanel) {
+
+	const folderFavorites = new FolderFavoritesDialog(currentDiffPanel.context);
 	
 	currentDiffPanel.msg.on('dialog:file', async () => {
 		
@@ -24,9 +27,9 @@ export function init (currentDiffPanel: DiffPanel) {
 		
 	});
 	
-	currentDiffPanel.msg.on('dialog:folder', async () => {
+	currentDiffPanel.msg.on('dialog:folder', async (data?: { currentPath?: string }) => {
 		
-		const fsPath = await dialogs.openFolder();
+		const fsPath = await folderFavorites.pick(data?.currentPath);
 		
 		currentDiffPanel.msg.send('dialog:folder', { fsPath });
 		

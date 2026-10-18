@@ -279,6 +279,12 @@ export class L13DiffListViewModel extends ViewModel {
 		let filteredItems = this.items;
 		
 		this[FILTERS].forEach((pipe) => filteredItems = pipe.transform(filteredItems));
+
+		filteredItems = filteredItems.filter(({ fileA, fileB }) => {
+
+			return [fileA, fileB].every((file) => !file || !/[/\\]/.test(file.relative));
+
+		});
 		
 		this.filteredItems = filteredItems;
 		

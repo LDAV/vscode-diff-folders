@@ -188,7 +188,25 @@ export class DiffPanel {
 	
 	public getPanelState (): DiffPanelStateMessage {
 		
-		return this.context.globalState.get(PANEL_STATE);
+		return {
+			views: {
+				unchangedChecked: true,
+				deletedChecked: true,
+				modifiedChecked: true,
+				untrackedChecked: true,
+				ignoredChecked: true,
+			},
+			search: {
+				searchterm: '',
+				useRegExp: false,
+				useCaseSensitive: false,
+				useFiles: true,
+				useFolders: true,
+				useSymlinks: true,
+				useConflicts: true,
+				useOthers: true,
+			},
+		};
 		
 	}
 	
@@ -353,6 +371,9 @@ function getHTMLforDiffPanel (context: vscode.ExtensionContext, webview: vscode.
 		<script nonce="${nonceToken}">
 			window.l13Settings = {
 				enablePreview: ${!!settings.get('enablePreview', false)},
+				showFileDate: ${!!settings.get('showFileDate', true)},
+				showFileTime: ${!!settings.get('showFileTime', true)},
+				showFileSize: ${!!settings.get('showFileSize', true)},
 			};
 		</script>
 		<script nonce="${nonceToken}">

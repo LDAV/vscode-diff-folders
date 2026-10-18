@@ -15,6 +15,8 @@ import { msg } from '../../../common';
 //	Exports ____________________________________________________________________
 
 export function init ({ diff, compare }: CompareEventsInit) {
+
+	compare.addEventListener('parent', () => diff.openParentFolders());
 	
 	compare.addEventListener('compare', (event) => {
 		

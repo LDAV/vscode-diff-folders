@@ -19,11 +19,11 @@ import type { L13DiffViewsViewModel } from './l13-diff-views.viewmodel';
 export class L13DiffViewsPipe implements L13DiffListPipe<Diff> {
 	
 	private cache: ViewsCache = {
-		unchangedChecked: false,
+		unchangedChecked: true,
 		deletedChecked: true,
 		modifiedChecked: true,
 		untrackedChecked: true,
-		ignoredChecked: false,
+		ignoredChecked: true,
 		items: [],
 		filteredItems: [],
 	};
@@ -54,6 +54,8 @@ export class L13DiffViewsPipe implements L13DiffListPipe<Diff> {
 		
 		return cache.filteredItems = items.filter((diff: Diff) => {
 			
+			if (diff.type === 'folder' && diff.status !== 'ignored') return true;
+
 			return vm.unchangedChecked && diff.status === 'unchanged'
 				|| vm.deletedChecked && diff.status === 'deleted'
 				|| vm.modifiedChecked && (diff.status === 'modified' || diff.status === 'conflicting')

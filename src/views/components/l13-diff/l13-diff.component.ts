@@ -223,6 +223,17 @@ export class L13DiffComponent extends L13Element<L13DiffViewModel> {
 		});
 		
 	}
+
+	public openParentFolders () {
+
+		if (panelVM.loading || !listVM.diffResult.pathA || !listVM.diffResult.pathB) return;
+
+		msg.send<DiffInitMessage>('open:parent', {
+			pathA: listVM.diffResult.pathA,
+			pathB: listVM.diffResult.pathB,
+		});
+
+	}
 	
 	public initPanelStates (panel: DiffPanelStateMessage) {
 		

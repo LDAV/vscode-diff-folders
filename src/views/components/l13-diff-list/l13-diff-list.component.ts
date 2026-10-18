@@ -3,6 +3,7 @@
 import type { Dictionary, Diff, DiffFile, DiffStatus } from '../../../types';
 
 import { remove } from '../../../@l13/arrays';
+import { getChangedFolders } from '../../../@l13/diffs';
 import { formatDate, formatFileSize, formatList } from '../../../@l13/formats';
 
 import { MODIFIED } from '../../../services/@l13/buffers';
@@ -10,7 +11,7 @@ import { MODIFIED } from '../../../services/@l13/buffers';
 import { changePlatform, isLinux, isMacOs, isWindows, L13Component, L13Element, L13Query } from '../../@l13/core';
 
 import { disableContextMenu, isMetaKey, msg, parseIcons, removeChildren, scrollElementIntoView } from '../../common';
-import { enablePreview } from '../../settings';
+import { enablePreview, showFileDate, showFileSize, showFileTime } from '../../settings';
 
 import type { L13DiffContextComponent } from '../l13-diff-context/l13-diff-context.component';
 
@@ -72,6 +73,8 @@ export class L13DiffListComponent extends L13Element<L13DiffListViewModel> {
 	public dragSrcRowElement: HTMLElement = null;
 	
 	private hasPanelFocus = true;
+
+	private lastClickRow: HTMLElement = null;
 	
 	public constructor () {
 		
@@ -89,6 +92,17 @@ export class L13DiffListComponent extends L13Element<L13DiffListViewModel> {
 		
 		disableContextMenu(this);
 		
+		const updateMetadata = () => {
+
+			this.content.classList.toggle('-show-date', showFileDate);
+			this.content.classList.toggle('-show-time', showFileTime);
+			this.content.classList.toggle('-show-size', showFileSize);
+
+		};
+
+		updateMetadata();
+		msg.on('change:settings', updateMetadata);
+
 		this.addEventListener('focus', () => {
 			
 			this.content.classList.add('-focus');
@@ -175,6 +189,15 @@ export class L13DiffListComponent extends L13Element<L13DiffListViewModel> {
 			}
 			
 			const listRow: HTMLElement = (<HTMLElement>target).closest('l13-diff-list-row');
+
+			if (!listRow) return;
+			this.lastClickRow = listRow;
+
+			const folderDiff = this.viewmodel.getDiffById(listRow.getAttribute('data-id'));
+			if (!metaKey && !ctrlKey && !shiftKey && folderDiff?.fileA?.type === 'folder' && folderDiff.fileB?.type === 'folder') {
+				msg.send('open:folder', { diff: folderDiff });
+				return;
+			}
 			
 			if (enablePreview) {
 				const id = listRow.getAttribute('data-id');
@@ -219,8 +242,13 @@ export class L13DiffListComponent extends L13Element<L13DiffListViewModel> {
 			
 			if (this.disabled) return;
 			
-			const id = (<HTMLElement>target).closest('l13-diff-list-row').getAttribute('data-id');
+			const row: HTMLElement = (<HTMLElement>target).closest('l13-diff-list-row');
+			if (!row || row !== this.lastClickRow) return;
+			const id = row.getAttribute('data-id');
 			const type = this.viewmodel.getDiffById(id).type;
+
+			const diff = this.viewmodel.getDiffById(id);
+			if (diff.fileA?.type === 'folder' && diff.fileB?.type === 'folder') return;
 			
 			await this.waitForPanelFocus();
 			
@@ -629,6 +657,7 @@ export class L13DiffListComponent extends L13Element<L13DiffListViewModel> {
 		
 		const items = this.viewmodel.items;
 		const cacheListItemViews: Dictionary<HTMLElement> = {};
+		const changedFolders = getChangedFolders(items);
 		
 		const foldersA: string[] = [];
 		const foldersB: string[] = [];
@@ -652,6 +681,14 @@ export class L13DiffListComponent extends L13Element<L13DiffListViewModel> {
 			row.classList.add(`-${diff.status}`);
 			row.setAttribute('data-status', diff.status);
 			row.setAttribute('data-id', diff.id);
+
+			if (fileA?.type === 'file' && fileB?.type === 'file' && diff.status === 'modified') {
+				row.classList.add('-content-different');
+			}
+
+			if (fileA && fileB && [fileA, fileB].some((file) => file.type === 'folder' && changedFolders.has(file.relative.replace(/\\/g, '/')))) {
+				row.classList.add('-content-different');
+			}
 			
 			appendColumn(row, diff, fileA, detectExistingFolder(fileA, foldersB, foldersA));
 			appendColumn(row, diff, fileB, detectExistingFolder(fileB, foldersA, foldersB));
@@ -778,6 +815,7 @@ function appendColumn (parent: HTMLElement, diff: Diff, file: DiffFile, exists: 
 		const fsPath = file.fsPath;
 		
 		column.classList.add(`-${type}`);
+		if (!diff.fileA || !diff.fileB) column.classList.add('-only-side');
 		column.setAttribute('data-type', type);
 		column.setAttribute('data-fs-path', fsPath);
 		column.title = fsPath;
@@ -825,6 +863,26 @@ Modified: ${formatDate(new Date(stat.mtime || stat.mtimeMs))}`;
 		basename.classList.add('-basename');
 		path.appendChild(basename);
 		
+		if (file.stat) {
+			const metadata = document.createElement('SPAN');
+			metadata.classList.add('-metadata');
+			const modified = new Date(file.stat.mtime || file.stat.mtimeMs);
+			const values = [
+				['date', modified.toLocaleDateString()],
+				['time', modified.toLocaleTimeString()],
+			];
+			if (type === 'file') values.push(['size', formatFileSize(file.stat.size, true)]);
+			values.forEach(([name, value]) => {
+
+				const field = document.createElement('SPAN');
+				field.classList.add(`-${name}`);
+				field.textContent = value;
+				metadata.appendChild(field);
+
+			});
+			column.appendChild(metadata);
+		}
+
 		if (diff.status === 'unchanged' && (diff.ignoredBOM || diff.ignoredEOL || diff.ignoredWhitespace)) {
 			const ignored = document.createElement('SPAN');
 			const modified = diff.fileA === file ? MODIFIED.LEFT : MODIFIED.RIGHT;

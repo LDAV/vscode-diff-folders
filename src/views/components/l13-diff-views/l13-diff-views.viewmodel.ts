@@ -32,7 +32,7 @@ export class L13DiffViewsViewModel extends ViewModel {
 		
 	}
 	
-	public unchangedChecked = false;
+	public unchangedChecked = true;
 	
 	public deletedChecked = true;
 	
@@ -40,7 +40,7 @@ export class L13DiffViewsViewModel extends ViewModel {
 	
 	public untrackedChecked = true;
 	
-	public ignoredChecked = false;
+	public ignoredChecked = true;
 	
 	public getState (): ViewsState {
 		

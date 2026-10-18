@@ -17,6 +17,14 @@ import { msg } from '../../../common';
 export function init ({ diff, leftVM, rightVM, panelVM, listVM }: DiffEventsInit) {
 	
 	msg.on('cancel', () => diff.enable());
+
+	msg.on('favorite:folder', ({ fsPath, side }: { fsPath: string, side: string }) => {
+
+		if (panelVM.loading) return;
+		if (side === 'left') leftVM.value = fsPath;
+		else if (side === 'right') rightVM.value = fsPath;
+
+	});
 	
 	msg.on('update:paths', (data: DiffUpdatePathsMessage) => {
 		

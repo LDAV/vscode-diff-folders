@@ -2,7 +2,7 @@
 	"name": "l13-diff",
 	"displayName": "Diff Folders",
 	"description": "Compare two folders in Visual Studio Code",
-	"version": "1.3.11",
+	"version": "1.3.12",
 	"publisher": "L13RARY",
 	"license": "SEE LICENSE IN LICENSE.md",
 	"homepage": "https://github.com/l13/vscode-diff/blob/master/README.md",
@@ -45,7 +45,10 @@
 		"onCommand:l13Diff.action.explorer.compareSelected",
 		"onView:l13DiffFavorites",
 		"onView:l13DiffHistory",
-		"onWebviewPanel:l13DiffPanel"
+		"onWebviewPanel:l13DiffPanel",
+		"onCommand:l13Diff.action.folderFavorite.add",
+		"onCommand:l13Diff.action.folderFavorite.remove",
+		"onCommand:l13Diff.action.folderFavorite.select"
 	],
 	"extensionKind": [
 		"workspace",
@@ -82,12 +85,12 @@
 		"viewsWelcome": [
 			{
 				"view": "l13DiffFavorites",
-				"contents": "No favorite diffs found.\n[New Diff Panel](command:l13Diff.action.panel.open)\nYou can also quickly open the diff panel with the keyboard shortcut [Ctrl+L Ctrl+L](command:l13Diff.action.panel.open) if no editor has a text focus.",
+				"contents": "No favorite folders yet.\n[Add Favorite Folder](command:l13Diff.action.folderFavorite.add)\nUse the folder buttons in a diff panel to select a favorite independently for each side.",
 				"when": "!isMac"
 			},
 			{
 				"view": "l13DiffFavorites",
-				"contents": "No favorite diffs found.\n[New Diff Panel](command:l13Diff.action.panel.open)\nYou can also quickly open the diff panel with the keyboard shortcut [⌘L ⌘L](command:l13Diff.action.panel.open) if no editor has a text focus.",
+				"contents": "No favorite folders yet.\n[Add Favorite Folder](command:l13Diff.action.folderFavorite.add)\nUse the folder buttons in a diff panel to select a favorite independently for each side.",
 				"when": "isMac"
 			},
 			{
@@ -115,7 +118,7 @@
 			},
 			{
 				"command": "l13Diff.action.panel.addToFavorites",
-				"title": "Add to Favorites",
+				"title": "Add Current Folders to Favorites",
 				"icon": {
 					"light": "images/favorites/favorite-add-light.svg",
 					"dark": "images/favorites/favorite-add-dark.svg"
@@ -189,12 +192,12 @@
 			{
 				"command": "l13Diff.action.favorites.export",
 				"category": "Diff Folders",
-				"title": "Export Favorites..."
+				"title": "Export Legacy Comparison Favorites…"
 			},
 			{
 				"command": "l13Diff.action.favorites.import",
 				"category": "Diff Folders",
-				"title": "Import Favorites..."
+				"title": "Import Legacy Comparison Favorites…"
 			},
 			{
 				"command": "l13Diff.action.history.compare",
@@ -448,6 +451,20 @@
 			{
 				"command": "l13Diff.action.developer.clear",
 				"title": "Developer: Clear Diff Folders Data"
+			},
+			{
+				"command": "l13Diff.action.folderFavorite.add",
+				"title": "Add Favorite Folder…",
+				"icon": "$(new-folder)"
+			},
+			{
+				"command": "l13Diff.action.folderFavorite.select",
+				"title": "Select Folder for Comparison…"
+			},
+			{
+				"command": "l13Diff.action.folderFavorite.remove",
+				"title": "Remove Favorite Folder",
+				"icon": "$(trash)"
 			}
 		],
 		"keybindings": [
@@ -924,7 +941,7 @@
 					"group": "navigation@1"
 				},
 				{
-					"command": "l13Diff.action.favoriteGroups.add",
+					"command": "l13Diff.action.folderFavorite.add",
 					"when": "view == l13DiffFavorites",
 					"group": "navigation@2"
 				},
@@ -1029,6 +1046,16 @@
 					"submenu": "viewItemContextProjects",
 					"group": "3_compare@1",
 					"when": "view =~ /^l13Projects(Favorites|Workspaces)$/ && viewItem =~ /^(current-)?(sub)?(favorite|project)-(folder|git|subfolder|vscode)$/"
+				},
+				{
+					"command": "l13Diff.action.folderFavorite.select",
+					"group": "1_select",
+					"when": "view == l13DiffFavorites && viewItem == folderFavorite"
+				},
+				{
+					"command": "l13Diff.action.folderFavorite.remove",
+					"group": "inline",
+					"when": "view == l13DiffFavorites && viewItem == folderFavorite"
 				}
 			],
 			"editor/title": [
@@ -1149,16 +1176,12 @@
 					"type": "array",
 					"default": [
 						"**/.DS_Store",
-						"**/.git",
-						"**/.hg",
-						"**/.svn",
-						"**/CVS",
-						"**/node_modules"
+						"**/.DS_store"
 					],
 					"items": {
 						"type": "string"
 					},
-					"description": "Indicates files or folders to be ignored, like \".git\", \".svn\", \"CVS\", \"node_modules\", etc."
+					"description": "Glob patterns for files or folders to ignore. Add **/.* to hide dotfiles and dotfolders at any depth. Run the comparison again after changing this setting. Excluded files and folders are omitted from the scan, even when Show Ignored Files is enabled. Examples: \".git\", \".svn\", \"CVS\", \"node_modules\", etc."
 				},
 				"l13Diff.openInNewDiffPanel": {
 					"type": "boolean",
@@ -1269,6 +1292,21 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Controls whether a group should ask for confirmation when more than 3 diff panels should be opened at once."
+				},
+				"l13Diff.showFileDate": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show file modification date in both sides of the folder comparison."
+				},
+				"l13Diff.showFileTime": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show file modification time in both sides of the folder comparison."
+				},
+				"l13Diff.showFileSize": {
+					"type": "boolean",
+					"default": true,
+					"description": "Show file size in both sides of the folder comparison."
 				},
 				"l13Diff.abortOnError": {
 					"type": "boolean",

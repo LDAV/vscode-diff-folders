@@ -24,7 +24,7 @@ export function formatAmount (value: number, units: Plural) {
 	
 }
 
-export function formatFileSize (size: number) {
+export function formatFileSize (size: number, compact = false) {
 	
 	const bytes = formatAmount(size, pluralBytes);
 	
@@ -34,7 +34,9 @@ export function formatFileSize (size: number) {
 	
 	if (!byteUnits[i]) i = byteUnits.length - 1;
 	
-	return `${parseFloat((size / pow(KB, i)).toFixed(2))} ${byteUnits[i]} (${bytes})`;
+	const formatted = `${parseFloat((size / pow(KB, i)).toFixed(2))} ${byteUnits[i]}`;
+
+	return compact ? formatted : `${formatted} (${bytes})`;
 	
 }
 

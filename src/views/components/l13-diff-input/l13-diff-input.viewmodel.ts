@@ -64,10 +64,12 @@ export class L13DiffInputViewModel extends ViewModel {
 	
 	public pick (file = false) {
 		
+		if (this.eventName) return;
+
 		this.eventName = `dialog:${file ? 'file' : 'folder'}`;
 		
 		msg.on(this.eventName, this.dialogListener);
-		msg.send(this.eventName);
+		msg.send(this.eventName, { currentPath: this.value });
 		
 	}
 	

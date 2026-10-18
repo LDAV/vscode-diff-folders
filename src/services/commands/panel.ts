@@ -69,9 +69,12 @@ export function activate (context: vscode.ExtensionContext) {
 	
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
 		
-		if (event.affectsConfiguration('l13Diff.enablePreview')) {
+		if (event.affectsConfiguration('l13Diff')) {
 			DiffPanel.sendAll<DiffPanelSettings>('change:settings', {
 				enablePreview: !!settings.get('enablePreview'),
+				showFileDate: !!settings.get('showFileDate', true),
+				showFileTime: !!settings.get('showFileTime', true),
+				showFileSize: !!settings.get('showFileSize', true),
 			});
 		}
 		

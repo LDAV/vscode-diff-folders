@@ -12,7 +12,12 @@ import { FavoritesDialog } from '../dialogs/FavoritesDialog';
 
 import { DiffPanel } from '../panel/DiffPanel';
 
-import { FavoritesProvider } from '../sidebar/FavoritesProvider';
+import { FolderFavoritesProvider } from '../sidebar/FolderFavoritesProvider';
+import { FolderFavoriteItem } from '../sidebar/trees/FolderFavoriteItem';
+import { openFolder } from '../common/dialogs';
+import { FolderFavoritesDialog } from '../dialogs/FolderFavoritesDialog';
+import { FolderFavoritesState } from '../states/FolderFavoritesState';
+import { lstat } from '../@l13/fse';
 import { FavoriteGroupTreeItem } from '../sidebar/trees/FavoriteGroupTreeItem';
 import { FavoriteTreeItem } from '../sidebar/trees/FavoriteTreeItem';
 
@@ -37,48 +42,45 @@ export function activate (context: vscode.ExtensionContext) {
 	const favoriteGroupsState = FavoriteGroupsState.create(context);
 	const favoritesDialog = FavoritesDialog.create(favoritesState);
 	const favoriteGroupsDialog = FavoriteGroupsDialog.create(favoriteGroupsState, favoritesState);
-	const favoritesProvider = FavoritesProvider.create({
-		favorites: favoritesState.get(),
-		favoriteGroups: favoriteGroupsState.get(),
-	});
-	const treeView = vscode.window.createTreeView('l13DiffFavorites', {
-		treeDataProvider: favoritesProvider,
-		showCollapseAll: true,
-	});
-	
-	subscriptions.push(treeView.onDidCollapseElement(({ element }) => {
-		
-		favoriteGroupsState.saveCollapseState((<FavoriteGroupTreeItem>element).favoriteGroup, true);
-		
-	}));
-	
-	subscriptions.push(treeView.onDidExpandElement(({ element }) => {
-		
-		favoriteGroupsState.saveCollapseState((<FavoriteGroupTreeItem>element).favoriteGroup, false);
-		
-	}));
-	
-	subscriptions.push(treeView);
-	
-	subscriptions.push(favoritesState.onDidChangeFavorites((favorites) => {
-		
-		favoritesProvider.refresh({
-			favorites,
-			favoriteGroups: favoriteGroupsState.get(),
-		});
-		
-	}));
-	
-	subscriptions.push(favoriteGroupsState.onDidChangeFavoriteGroups((favoriteGroups) => {
-		
-		favoritesProvider.refresh({
-			favorites: favoritesState.get(),
-			favoriteGroups,
-		});
-		
-	}));
-	
+	const folderState = new FolderFavoritesState(context);
+	const folderDialog = new FolderFavoritesDialog(context);
+	const folderProvider = new FolderFavoritesProvider(folderState);
+	subscriptions.push(vscode.window.createTreeView('l13DiffFavorites', { treeDataProvider: folderProvider }));
+	subscriptions.push(FolderFavoritesState.onDidChange(() => folderProvider.refresh()));
+	subscriptions.push(favoritesState.onDidChangeFavorites(() => folderProvider.refresh()));
+
 	commands.register(context, {
+
+		'l13Diff.action.folderFavorite.add': async () => {
+
+			const path = await openFolder();
+			if (path) await folderDialog.add([path]);
+
+		},
+
+		'l13Diff.action.folderFavorite.remove': async (item?: FolderFavoriteItem) => {
+
+			const fsPath = item?.fsPath || await vscode.window.showQuickPick(folderState.get(), { placeHolder: 'Remove a folder from favorites' });
+			if (fsPath) await folderState.remove(fsPath);
+
+		},
+
+		'l13Diff.action.folderFavorite.select': async (item?: FolderFavoriteItem) => {
+
+			const fsPath = item?.fsPath || await folderDialog.pick();
+			if (!fsPath) return;
+
+			if (!(await lstat(fsPath))?.isDirectory()) {
+				await vscode.window.showErrorMessage(`Folder is not available: ${fsPath}`);
+				return;
+			}
+			const side = await vscode.window.showQuickPick(['Left folder', 'Right folder'], { placeHolder: 'Choose the comparison side' });
+			if (!side) return;
+			if (!DiffPanel.currentPanel) await DiffPanel.create(context);
+			else DiffPanel.createOrShow(context);
+			DiffPanel.send('favorite:folder', { fsPath, side: side === 'Left folder' ? 'left' : 'right' });
+
+		},
 	
 		'l13Diff.action.favorite.compare': ({ favorite }: FavoriteTreeItem) => {
 			
@@ -131,7 +133,12 @@ export function activate (context: vscode.ExtensionContext) {
 		'l13Diff.action.favorites.export': () => favoriteGroupsDialog.export(),
 		'l13Diff.action.favorites.import': () => favoriteGroupsDialog.import(),
 		
-		'l13Diff.action.favorites.clear': () => favoritesDialog.clear(),
+		'l13Diff.action.favorites.clear': async () => {
+
+			const answer = await vscode.window.showWarningMessage('Remove all favorite folders?', { modal: true }, 'Remove');
+			if (answer) await folderState.clear();
+
+		},
 		
 	});
 	

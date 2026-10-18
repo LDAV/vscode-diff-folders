@@ -53,7 +53,30 @@ Compare two folders in Visual Studio Code.
 * `Export Favorites` - Export all favorites and groups to a JSON file.
 * `Import Favorites` - Import favorites and groups from a JSON file. The limit is 1000 entries.
 
+## Favorite folders
+
+Favorites are individual folders shared by both sides. Click the folder button beside the left or right path to choose a favorite for that side. The picker can add a folder, save the current folder, or remove a favorite. Adding a new folder also selects it for that side. Press Compare after choosing both folders. Alt-click still opens the file picker.
+
+The Favorites sidebar lists individual folders. Its add button saves a folder; clicking an entry lets you choose the left or right side. Add Current Folders to Favorites saves both current folders separately. Folder paths from legacy comparison favorites are recovered automatically and deduplicated; the legacy data is retained.
+
 ## Available Settings
+
+New panels show all file statuses by default, including unchanged and ignored entries. Dotfiles are visible except for macOS metadata files `.DS_Store` and `.DS_store`, which are excluded by default. Filters remain available when needed. Opening a panel starts with all statuses and file types visible and an empty search, without restoring previous filters.
+
+
+* `l13Diff.showFileDate` - Show the modification date on both sides of the comparison (default: true).
+* `l13Diff.showFileTime` - Show the modification time on both sides of the comparison (default: true).
+* `l13Diff.showFileSize` - Show file sizes on both sides of the comparison (default: true).
+
+Dates and times use the local format. These settings apply immediately to open panels. Folder sizes are not calculated.
+
+File pairs marked as modified by the comparison have a light blue background (`#c5dfff`), following the active comparison settings. A different modification timestamp alone does not trigger highlighting. This highlighting is independent of the metadata visibility settings. Hover and selection backgrounds take precedence.
+
+Folders also use the light blue background (`#c5dfff`) when they contain modified, added, deleted, or conflicting files at any depth. Ignored entries and timestamp-only differences do not trigger folder highlighting.
+
+All file and folder text is black (`#000`), including metadata and selected or hovered rows. Files and folders present on only one side have a pink background (`#ffc7c3`) on the existing side; the missing side stays empty.
+
+Copying a file preserves the source modification and access timestamps on the destination, including when overwriting an existing file. Creation time depends on the filesystem.
 
 * `l13Diff.maxRecentlyUsed` - Defines the max length of recently used entries in the menu.
 * `l13Diff.openToSide` - Set true if a diff or file should open to the side.
@@ -66,6 +89,9 @@ Compare two folders in Visual Studio Code.
 	* `*` matches zero or more characters in a path segment e.g. `*.txt`.
 	* `?` matches on one character in a path segment.
 	* `**` matches any number of path segments including none e.g. `**/node_modules`.
+
+Only `.DS_Store` and `.DS_store` are excluded by default. To exclude names starting with a dot, add `**/.*` to `l13Diff.exclude` in VS Code Settings. Keep any existing patterns you want to retain. You can also add patterns such as `**/*.log` or `**/Thumbs.db`. Run the comparison again after changing the list. Excluded files and folders are omitted from the scan and stay hidden even when **Show Ignored Files** is enabled.
+
 * `l13Diff.openInNewDiffPanel` - If true a click on a favorite diff or a previous comparison opens in a new diff panel.
 * `l13Diff.confirmCaseInsensitiveCompare` - If false confirm dialog for comparing case insensitive on a case sensitive file system does not appear.
 * `l13Diff.confirmCopy` - If false confirm dialog for copying files does not appear.
@@ -201,6 +227,11 @@ If the key bindings don't work, please check `Preferences -> Keyboard Shortcuts`
 
 * `Click` - Select a file or folder in the list view.
 * `Shift + Click` - Add files and folders from the last selected item to the current selected item in the list view.
+* `Click` on a folder present on both sides - Navigate into that folder on both sides and compare it in the current panel. Use Ctrl/Cmd or Shift with a click to select folders instead.
+* `↑ ..` next to Compare - Open the parent folders on both sides and run the comparison again.
+
+The list shows only the files and subfolders directly inside the current folder. Subfolder contents appear after entering that subfolder. Non-ignored folders remain visible regardless of the file status filters so that you can navigate into them.
+
 * `Double Click` - Open a diff or file.
 * `Alt + Double Click` - Open diff or file to side.
 * `Enter` - Same as `Double Click`.
