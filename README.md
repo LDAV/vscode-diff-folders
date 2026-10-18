@@ -2,6 +2,10 @@
 
 Compare two folders in Visual Studio Code.
 
+This project is a fork of [Diff Folders by L13|RARY](https://github.com/L13/vscode-diff). The original extension and code were created by L13|RARY; this fork adds folder navigation, individual folder favorites, file metadata, and custom comparison highlighting.
+
+This fork is maintained at [LDAV/vscode-diff-folders](https://github.com/LDAV/vscode-diff-folders). Please report issues specific to this fork in [its issue tracker](https://github.com/LDAV/vscode-diff-folders/issues). The original copyright and license are preserved in [LICENSE.md](LICENSE.md).
+
 ![Diff Folders](images/previews/preview.png)
 
 ## What's new in Diff Folders 1.3.0
